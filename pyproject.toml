@@ -34,7 +34,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cwl2puml = "cwl2click.cli:main"
+cwl2click = "cwl2click.cli:main"
 
 [project.urls]
 Documentation = "https://github.com/Terradue/cwl2click#readme"

@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import to_click
+from . import (
+    to_click,
+    to_snake_case
+)
 from cwl_loader import load_cwl_from_location
 from datetime import datetime
 from loguru import logger
@@ -52,7 +55,7 @@ def main(
     logger.info('------------------------------------------------------------------------')
 
     output.mkdir(parents=True, exist_ok=True)
-    target: Path = Path(output, f"{workflow_id}.py")
+    target: Path = Path(output, f"{to_snake_case(workflow_id)}.py")
 
     try:
         with target.open('w') as stream:
@@ -61,6 +64,8 @@ def main(
                 workflow_id=workflow_id,
                 output_stream=stream
             )
+
+        logger.success(f"{workflow_id} successfully converted to Click Python application in {target}.")
 
         logger.info('------------------------------------------------------------------------')
         logger.success('BUILD SUCCESS')
