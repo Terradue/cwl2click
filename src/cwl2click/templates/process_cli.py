@@ -10,10 +10,14 @@ import time
 
 @click.command()
 {% for input in process.inputs %}@click.option(
-    "{{input.inputBinding.prefix}}"
+    "{{input.inputBinding.prefix}}",
+    type=click.{{input.type_ | to_click_type}},
+    multiple={{input.type_ | is_array}},
+    required={{input.type_ | is_required  }},
+    {% if input.doc %}help="{{input.doc}}",{% endif %}
 )
 {% endfor %}def main({% for input in process.inputs %}
-    {{input.id | to_snake_case}},{% endfor %}
+    {{input.id | to_snake_case}}: {{input.type_ | to_python_type}},{% endfor %}
 ):
     start_time = time.time()
 

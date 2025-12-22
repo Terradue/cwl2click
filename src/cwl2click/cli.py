@@ -50,6 +50,8 @@ def main(
 ):
     start_time = time.time()
 
+    click.STRING
+
     cwl_document = load_cwl_from_location(path=workflow)
 
     logger.info('------------------------------------------------------------------------')
