@@ -6,4 +6,5 @@ class Testloading(TestCase):
         pass
 
     def test_void(self):
+        """ Test with no content."""
         pass
