@@ -113,7 +113,7 @@ def main(
                     output_stream=stream
                 )
 
-            logger.success(f"'{workflow}' successfully converted to Click Python application in {target}.")
+            logger.success(f"'{workflow}' successfully converted to Click Python application in '{target.absolute()}'.")
 
             logger.info('------------------------------------------------------------------------')
             logger.success('BUILD SUCCESS')
