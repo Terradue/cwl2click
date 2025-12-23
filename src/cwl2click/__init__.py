@@ -16,11 +16,7 @@ from cwl_loader.utils import (
     contains_process,
     search_process
 )
-from cwl_utils.parser import (
-    CommandLineTool,
-    InputArraySchema,
-    Process
-)
+from cwl_utils.parser import CommandLineTool
 from datetime import datetime
 from jinja2 import (
     Environment,
@@ -44,7 +40,7 @@ import time
 pattern = re.compile(r'(?<!^)(?=[A-Z])')
 
 def to_snake_case(name: str) -> str:
-    return pattern.sub('_', name).lower()
+    return pattern.sub('_', name).lower().replace('-', '_')
 
 def is_nullable(
     type_: Any
@@ -56,6 +52,13 @@ def is_required(
 ) -> bool:
     return not is_nullable(type_)
 
+def is_flag(
+    type_: Any
+) -> bool:
+    return isinstance(type_, list) and "boolean" in type_ or "boolean" == type_
+
+_STRING_FORMAT_SCHEMA_: str = "https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml"
+
 _CWL_CLICK_MAP_: Mapping[Any, str] = {
     "int": "INT",
     "long": "INT",
@@ -63,8 +66,10 @@ _CWL_CLICK_MAP_: Mapping[Any, str] = {
     "float": "FLOAT",
     "boolean": "BOOL", 
     "string": "STRING",
-    "Directory": "STRING",
-    "File": "STRING"
+    "Directory": "Path(path_type=Path, exists=True, readable=True, resolve_path=True, file_okay=False, dir_okay=True)",
+    "File": "Path(path_type=Path, exists=True, readable=True, resolve_path=True, file_okay=True, dir_okay=False)",
+    f"{_STRING_FORMAT_SCHEMA_}#DateTime": "DateTime(formats=['%Y-%m-%dT%H:%M:%S'])",
+    f"{_STRING_FORMAT_SCHEMA_}#UUID": "UUID"
 }
 
 def to_click_type(
@@ -83,7 +88,7 @@ def to_click_type(
         if "enum" == key:
             return f"Choice([{list(map(lambda symbol : symbol.split('/')[-1], type_.symbols))}])"
 
-    return _CWL_CLICK_MAP_.get(key, str(type_))
+    return _CWL_CLICK_MAP_.get(key, "STRING")
 
 _CWL_PYTHON_MAP_: Mapping[Any, str] = {
     "int": "int",
@@ -144,6 +149,7 @@ _jinja_environment.filters.update(
     _to_mapping(
         [
             is_array,
+            is_flag,
             is_required,
             is_nullable,
             to_click_type,
@@ -159,39 +165,15 @@ _jinja_environment.tests.update(
 )
 
 def to_click(
-    cwl_document: Process | List[Process],
-    workflow_id: str,
+    command_line_tools: List[CommandLineTool],
     output_stream: TextIO
 ):
-    logger.info(f"Looking to {workflow_id} in the CWL document source...")
-
-    process: Process | None = search_process(
-        process_id=workflow_id,
-        process=cwl_document
-    )
-    
-    if not contains_process(
-        process_id=workflow_id,
-        process=cwl_document
-    ):
-        raise ValueError(f"Process {workflow_id} does not exist in input CWL document, only {list(map(lambda p: p.id, cwl_document)) if isinstance(cwl_document, list) else [cwl_document.id]} available.")
-
-
-    logger.info(f"Process {workflow_id} found in the CWL document source, veryfying it is a legit {CommandLineTool} instance...")
-
-    if not isinstance(process, CommandLineTool):
-        raise ValueError(f"Process {workflow_id} expected to tbe a {CommandLineTool} instance, found {type(process)}") 
-
-    # can't be None and correctly found it, at that point
-
-    logger.info(f"Process {workflow_id} found in the CWL document source and legit {type(process)}, converting...")
-
-    template = _jinja_environment.get_template(f"process_cli.py")
+    template = _jinja_environment.get_template(f"command_line_tools.py")
 
     output_stream.write(
         template.render(
             version=_get_version(),
             timestamp=datetime.fromtimestamp(time.time()).isoformat(timespec='milliseconds'),
-            process=process
+            command_line_tools=command_line_tools
         )
     )

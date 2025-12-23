@@ -17,9 +17,18 @@ from . import (
     to_snake_case
 )
 from cwl_loader import load_cwl_from_location
+from cwl_utils.parser import (
+    Process,
+    CommandLineTool
+)
 from datetime import datetime
 from loguru import logger
 from pathlib import Path
+from os.path import (
+    basename,
+    splitext
+)
+from typing import List
 
 import click
 import time
@@ -31,9 +40,10 @@ import time
 )
 @click.option(
     '--workflow-id',
-    required=True,
+    required=False,
     type=click.STRING,
-    help="ID of the main Workflow"
+    multiple=True,
+    help="ID(s) of the CommandLineTools"
 )
 @click.option(
     '--output',
@@ -41,40 +51,76 @@ import time
         path_type=Path
     ),
     required=True,
+    default=Path("."),
     help="Output directory path"
 )
 def main(
     workflow: str,
-    workflow_id: str,
+    workflow_id: List[str],
     output: Path
 ):
     start_time = time.time()
 
     click.STRING
 
-    cwl_document = load_cwl_from_location(path=workflow)
+    cwl_document: Process | List[Process] = load_cwl_from_location(path=workflow)
 
-    logger.info('------------------------------------------------------------------------')
+    clts: List[CommandLineTool] = []
 
-    output.mkdir(parents=True, exist_ok=True)
-    target: Path = Path(output, f"{to_snake_case(workflow_id)}.py")
+    def _add_if_eligible(process: Process):
+        logger.debug(f"* Checking '{process.id}'...")
+        if isinstance(process, CommandLineTool):
+            logger.debug(f"  '{process.id}' is a CommandLineTool instance")
+            if workflow_id:
+                logger.debug(f"  Checking if '{process.id}' is in the include list {workflow_id}...")
+                if process.id in workflow_id:
+                    logger.debug(f"  '{process.id}' is in the include list {workflow_id}, processing")
+                    clts.append(process)
+                else:
+                    logger.warning(f"  '{process.id}' not in the include list, discarding")
+            else:
+                logger.debug(f"  Include list not defined, processing '{process.id}'")
+                clts.append(process)
+        else:
+            logger.warning(f"  '{process.id}' is not a CommandLineTool instance, discarding")
 
-    try:
-        with target.open('w') as stream:
-            to_click(
-                cwl_document=cwl_document,
-                workflow_id=workflow_id,
-                output_stream=stream
-            )
+    if isinstance(cwl_document, list):
+        logger.debug(f"Input CWL Document from {workflow} is a $graph:")
+        for process in cwl_document:
+            _add_if_eligible(process)
+    else:
+        _add_if_eligible(cwl_document)
 
-        logger.success(f"{workflow_id} successfully converted to Click Python application in {target}.")
-
+    if not clts:
+        if workflow_id:
+            logger.error(f"{workflow_id} not found on in input CWL document, only {list(map(lambda p: p.id, cwl_document)) if isinstance(cwl_document, list) else [cwl_document.id]} available.")
+        else:
+            logger.error("No CommandLineTool(s) found in input CWL document")
+    else:
         logger.info('------------------------------------------------------------------------')
-        logger.success('BUILD SUCCESS')
-    except Exception as e:
-        logger.info('------------------------------------------------------------------------')
-        logger.error('BUILD FAILED')
-        logger.error(f"An unexpected error occurred while generating {target}: {e}")
+        logger.debug(f"Processing CommadLineTools {[clt.id for clt in clts]}")
+
+        output.mkdir(parents=True, exist_ok=True)
+        file_name = basename(workflow)
+        file_name, file_extension = splitext(workflow)
+
+        target: Path = Path(output, f"{file_name}.py")
+
+        try:
+            with target.open('w') as stream:
+                to_click(
+                    command_line_tools=clts,
+                    output_stream=stream
+                )
+
+            logger.success(f"'{workflow}' successfully converted to Click Python application in {target}.")
+
+            logger.info('------------------------------------------------------------------------')
+            logger.success('BUILD SUCCESS')
+        except Exception as e:
+            logger.info('------------------------------------------------------------------------')
+            logger.error('BUILD FAILED')
+            logger.error(f"An unexpected error occurred while generating {target}: {e}")
 
     end_time = time.time()
 
