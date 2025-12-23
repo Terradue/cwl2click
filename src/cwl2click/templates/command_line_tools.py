@@ -13,14 +13,10 @@ def cli() -> None:
 {% for clt in command_line_tools %} 
 cli.add_command(
     click.Command(
-        name="{{clt.id}}",
+        name="{{clt | get_command_name}}",
         callback={{clt.id | to_snake_case}}_command,
         params=[
-{% for argument in clt.arguments %}            click.Argument(
-                ["{{argument}}"],
-                required=True
-            ),
-{% endfor %}{% for input in clt.inputs %}            click.Option(
+{% for input in clt.inputs %}            click.Option(
                 ["{{input.inputBinding.prefix}}"],
                 "{{input.id}}",
                 type=click.{{input.type_ | to_click_type}},

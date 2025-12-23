@@ -40,7 +40,7 @@ import time
 pattern = re.compile(r'(?<!^)(?=[A-Z])')
 
 def to_snake_case(name: str) -> str:
-    return pattern.sub('_', name).lower().replace('-', '_')
+    return pattern.sub('_', name.replace('-', '_')).lower()
 
 def is_nullable(
     type_: Any
@@ -56,6 +56,22 @@ def is_flag(
     type_: Any
 ) -> bool:
     return isinstance(type_, list) and "boolean" in type_ or "boolean" == type_
+
+def get_command_name(
+    clt: CommandLineTool
+) -> str:
+    if clt.baseCommand:
+        if isinstance(clt.baseCommand, list):
+            if len(clt.baseCommand) > 1:
+                return clt.baseCommand[1]
+        
+        if clt.arguments:
+            if isinstance(clt.arguments, list):
+                return clt.arguments[0]
+            return str(clt.arguments)
+
+        raise Exception(f"Impossible to extract the sub-command from CommandLineTool '{clt.id}':\n- `clt.baseCommand` contains the tool only or is empty;\n-no `clt.arguments` provided.")
+    raise Exception(f"CommandLineTool '{clt.id}' does not define a 'baseCommand' property, impossible to map it to a `click.Command`")
 
 _STRING_FORMAT_SCHEMA_: str = "https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml"
 
@@ -77,7 +93,6 @@ def to_click_type(
 ) -> str:
     logger.debug(f"Converting {type_} CWL type to the related Click type...")
 
-    key: str
     if isinstance(type_, str):
         key = type_
     elif isinstance(type_, list):
@@ -85,8 +100,8 @@ def to_click_type(
     else:
         key = type_.class_ # type: ignore
 
-        if "enum" == key:
-            return f"Choice([{list(map(lambda symbol : symbol.split('/')[-1], type_.symbols))}])"
+    if not isinstance(key, str) and hasattr(key, "symbols"):
+        return f"Choice({list(map(lambda symbol : symbol.split('/')[-1], key.symbols))})"
 
     return _CWL_CLICK_MAP_.get(key, "STRING")
 
@@ -148,6 +163,7 @@ _jinja_environment = Environment(
 _jinja_environment.filters.update(
     _to_mapping(
         [
+            get_command_name,
             is_array,
             is_flag,
             is_required,
