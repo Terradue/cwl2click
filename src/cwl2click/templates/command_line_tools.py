@@ -25,8 +25,7 @@ cli.add_command(
                 is_flag={{input.type_ | is_flag}},
                 {% if input.doc %}help="{{input.doc}}",{% endif %}
             ),
-{% endfor %}
-        ]
+{% endfor %}        ]
     )
 )
 {% endfor %}
