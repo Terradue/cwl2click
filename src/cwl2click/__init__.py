@@ -93,15 +93,19 @@ def to_click_type(
 ) -> str:
     logger.debug(f"Converting {type_} CWL type to the related Click type...")
 
+    key = None
+
     if isinstance(type_, str):
         key = type_
     elif isinstance(type_, list):
         key = [item_type for item_type in type_ if "null" != item_type][0]
-    else:
+    elif hasattr(type_, "class_"):
         key = type_.class_ # type: ignore
 
-    if not isinstance(key, str) and hasattr(key, "symbols"):
-        return f"Choice({list(map(lambda symbol : symbol.split('/')[-1], key.symbols))})"
+        if not isinstance(key, str) and hasattr(key, "symbols"):
+            return f"Choice({list(map(lambda symbol : symbol.split('/')[-1], key.symbols))})"
+    elif hasattr(type_, "symbols"):
+        return f"Choice({list(map(lambda symbol : symbol.split('/')[-1], type_.symbols))})"
 
     return _CWL_CLICK_MAP_.get(key, "STRING")
 
