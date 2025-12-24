@@ -186,6 +186,7 @@ _jinja_environment.tests.update(
 
 def to_click(
     command_line_tools: List[CommandLineTool],
+    module_name: str,
     output_stream: TextIO
 ):
     template = _jinja_environment.get_template(f"command_line_tools.py")
@@ -194,6 +195,7 @@ def to_click(
         template.render(
             version=_get_version(),
             timestamp=datetime.fromtimestamp(time.time()).isoformat(timespec='milliseconds'),
+            module_name=module_name,
             command_line_tools=command_line_tools
         )
     )

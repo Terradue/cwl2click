@@ -116,12 +116,14 @@ def main(
 
         file_name, _ = splitext(file_name)
 
-        target: Path = Path(output, f"{file_name}.py")
+        target: Path = Path(output, f"{to_snake_case(file_name)}.py")
+        module_name = basename(target.parent.absolute().as_posix())
 
         try:
             with target.open('w') as stream:
                 to_click(
                     command_line_tools=clts,
+                    module_name=module_name,
                     output_stream=stream
                 )
 
