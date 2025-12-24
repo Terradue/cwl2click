@@ -17,7 +17,7 @@ cli.add_command(
         callback={{clt.id | to_snake_case}}_command,
         params=[
 {% for input in clt.inputs %}            click.Option(
-                ["{{input.inputBinding.prefix}}"],
+                ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
                 "{{input.id}}",
                 type=click.{{input.type_ | to_click_type}},
                 multiple={{input.type_ | is_array}},
