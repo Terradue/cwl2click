@@ -22,8 +22,8 @@ cli.add_command(
                 type=click.{{input.type_ | to_click_type}},
                 multiple={{input.type_ | is_array}},
                 required={{input.type_ | is_required}},
-                is_flag={{input.type_ | is_flag}},
-                {% if input.doc %}help="{{input.doc}}",{% endif %}
+                is_flag={{input.type_ | is_flag}},{% if input.doc %}
+                help="{{input.doc}}",{% endif %}
             ),
 {% endfor %}        ]
     )
