@@ -29,6 +29,7 @@ from os.path import (
     splitext
 )
 from typing import List
+from urllib.parse import urlparse
 
 import click
 import time
@@ -101,8 +102,19 @@ def main(
         logger.debug(f"Processing CommadLineTools {[clt.id for clt in clts]}")
 
         output.mkdir(parents=True, exist_ok=True)
+
         file_name = basename(workflow)
-        file_name, file_extension = splitext(workflow)
+        try:
+            result = urlparse(workflow)
+            if result.scheme in ('http', 'https') and result.netloc:
+                logger.debug(f"{workflow} was parsed from a URL, normalizing...")
+                file_name = basename(result.path)
+            else:
+                logger.debug(f"{workflow} was not parsed from a URL")
+        except Exception:
+            logger.debug(f"{workflow} was not parsed from a URL")
+
+        file_name, _ = splitext(file_name)
 
         target: Path = Path(output, f"{file_name}.py")
 
