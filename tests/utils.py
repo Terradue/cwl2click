@@ -51,9 +51,7 @@ class CWLClickTestCase:
 
         for line in text.splitlines():
             if "_impl import execute" in line:
-                # Example:
-                # from tmp.otsu_impl import execute as otsu_command
-                module_path = line.split()[1]      # tmp.otsu_impl
+                module_path = line.split()[1]      # module.cli_impl
                 pkg, mod = module_path.split(".")
 
                 pkg_dir = self.tmp_path / pkg
