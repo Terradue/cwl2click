@@ -17,6 +17,8 @@ cli.add_command(
     click.Command(
         name="{{clt | get_command_name}}",
         callback={{clt.id | to_snake_case}}_command,
+        help="{{clt.doc}}",
+        short_help="{{clt.label}}",
         params=[
 {% for input in clt.inputs %}            click.Option(
                 ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
