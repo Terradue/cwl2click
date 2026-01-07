@@ -42,15 +42,48 @@ pattern = re.compile(r'(?<!^)(?=[A-Z])')
 def to_snake_case(name: str) -> str:
     return pattern.sub('_', name.replace('-', '_')).lower()
 
+def is_array(
+    type_
+) -> bool:
+    return isinstance(type_, list) or hasattr(type_, "items") or (hasattr(type_, "class_") and "array" == type_.class_)
+
+def _get_array_size(
+    type_: Any
+) -> int:
+    if isinstance(type_, list):
+        return len(type_)
+
+    if hasattr(type_, "items"):
+        return _get_array_size(type_.items)
+
+    return 0
+
 def is_nullable(
     type_: Any
 ) -> bool:
-    return isinstance(type_, list) and "null" in type_
+    return isinstance(type_, list) and "null" in type_ or hasattr(type_, "items") and "null" in getattr(type_, "items")
 
 def is_required(
     type_: Any
 ) -> bool:
-    return not is_nullable(type_)
+    required: bool = not is_nullable(type_)
+
+    logger.debug(f"Detected type {type_} as required: {required}")
+
+    return required
+
+def is_multiple(
+    type_
+) -> bool:
+    if not is_array(type_):
+        return False
+    
+    array_size: int = _get_array_size(type_)
+
+    if 2 == array_size and is_nullable(type_):
+        return False
+
+    return True
 
 def is_flag(
     type_: Any
@@ -91,14 +124,14 @@ _CWL_CLICK_MAP_: Mapping[Any, str] = {
 def to_click_type(
     type_: Any
 ) -> str:
-    logger.debug(f"Converting {type_} CWL type to the related Click type...")
-
     key = None
 
     if isinstance(type_, str):
         key = type_
     elif isinstance(type_, list):
         key = [item_type for item_type in type_ if "null" != item_type][0]
+    elif hasattr(type_, "items"):
+        key = type_.items
     elif hasattr(type_, "class_"):
         key = type_.class_ # type: ignore
     elif hasattr(type_, "symbols"):
@@ -107,7 +140,11 @@ def to_click_type(
     if key and not isinstance(key, str) and hasattr(key, "symbols"):
         return f"Choice({list(map(lambda symbol : symbol.split('/')[-1], key.symbols))})"
 
-    return _CWL_CLICK_MAP_.get(key, "STRING")
+    mapped_type: str = _CWL_CLICK_MAP_.get(key, "STRING")
+
+    logger.debug(f"Type {type_}, represented by key type {key}, mapped to {mapped_type}")
+
+    return mapped_type
 
 _CWL_PYTHON_MAP_: Mapping[Any, str] = {
     "int": "int",
@@ -148,11 +185,6 @@ def _to_mapping(
 
     return mapping
 
-def is_array(
-    type_
-) -> bool:
-    return isinstance(type, list) or hasattr(type_, "class_") and "array" == type_.class_
-
 def _get_version() -> str:
     try:
         return version("cwl2puml")
@@ -170,6 +202,7 @@ _jinja_environment.filters.update(
             get_command_name,
             is_array,
             is_flag,
+            is_multiple,
             is_required,
             is_nullable,
             to_click_type,

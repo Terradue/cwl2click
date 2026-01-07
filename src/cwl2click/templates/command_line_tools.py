@@ -24,7 +24,7 @@ cli.add_command(
                 ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
                 "{{input.id}}",
                 type=click.{{input.type_ | to_click_type}},
-                multiple={{input.type_ | is_array}},
+                multiple={{input.type_ | is_multiple}},
                 required={{input.type_ | is_required}},
                 is_flag={{input.type_ | is_flag}},{% if input.doc %}
                 help="{{input.doc}}",{% endif %}

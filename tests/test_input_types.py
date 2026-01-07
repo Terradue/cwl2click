@@ -55,20 +55,20 @@ class TestInputTypes(CWLClickTestCase, TestCase):
         cmd = cli.commands["argument"]
         params = {p.name: p for p in cmd.params}
 
-        # opt = params["file_input"]
-        # self.assertTrue(opt.required)
-        # self.assertEqual(opt.type.name, "file")
-        # self.assertTrue(opt.multiple)
+        opt = params["file_input"]
+        self.assertTrue(opt.required)
+        self.assertEqual(opt.type.name, "file")
+        self.assertTrue(opt.multiple)
 
-        # opt = params["directory_input"]
-        # self.assertTrue(opt.required)
-        # self.assertEqual(opt.type.name, "directory")
-        # self.assertTrue(opt.multiple)
+        opt = params["directory_input"]
+        self.assertTrue(opt.required)
+        self.assertEqual(opt.type.name, "directory")
+        self.assertTrue(opt.multiple)
 
         opt = params["string_input"]
         self.assertTrue(opt.required)
         self.assertEqual(opt.type.name, "text")
-        # self.assertTrue(opt.multiple)
+        self.assertTrue(opt.multiple)
 
         opt = params["int_input"]
         self.assertTrue(opt.required)
