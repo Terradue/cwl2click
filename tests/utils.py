@@ -86,7 +86,7 @@ class CWLClickTestCase:
             traceback.print_exc()
             raise e 
 
-        if not hasattr(module, "cli"):
-            raise AssertionError("Generated module does not expose `cli`")
+        if not hasattr(module, "basecommand"):
+            raise AssertionError("Generated module does not expose `basecommand`")
 
-        return module.cli
+        return module.basecommand

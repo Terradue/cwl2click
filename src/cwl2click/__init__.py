@@ -90,9 +90,23 @@ def is_flag(
 ) -> bool:
     return isinstance(type_, list) and "boolean" in type_ or "boolean" == type_
 
-def get_command_name(
+def get_base_command(
     clt: CommandLineTool
 ) -> str:
+    if clt.baseCommand:
+        if isinstance(clt.baseCommand, list):
+            if len(clt.baseCommand) > 0:
+                return clt.baseCommand[0]
+        
+        if isinstance(clt.baseCommand, str):
+            return clt.baseCommand
+    
+    raise Exception(f"CommandLineTool '{clt.id}' does not define a 'baseCommand' property, impossible to map it to a `click.Command`")
+    
+
+def get_command_name(
+    clt: CommandLineTool
+) -> str | None:
     if clt.baseCommand:
         if isinstance(clt.baseCommand, list):
             if len(clt.baseCommand) > 1:
@@ -103,8 +117,9 @@ def get_command_name(
                 return clt.arguments[0]
             return str(clt.arguments)
 
-        raise Exception(f"Impossible to extract the sub-command from CommandLineTool '{clt.id}':\n- `clt.baseCommand` contains the tool only or is empty;\n-no `clt.arguments` provided.")
-    raise Exception(f"CommandLineTool '{clt.id}' does not define a 'baseCommand' property, impossible to map it to a `click.Command`")
+    #     raise Exception(f"Impossible to extract the sub-command from CommandLineTool '{clt.id}':\n- `clt.baseCommand` contains the tool only or is empty;\n-no `clt.arguments` provided.")
+    # raise Exception(f"CommandLineTool '{clt.id}' does not define a 'baseCommand' property, impossible to map it to a `click.Command`")
+    return None
 
 _STRING_FORMAT_SCHEMA_: str = "https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml"
 
@@ -199,6 +214,7 @@ _jinja_environment = Environment(
 _jinja_environment.filters.update(
     _to_mapping(
         [
+            get_base_command,
             get_command_name,
             is_array,
             is_flag,
@@ -213,7 +229,9 @@ _jinja_environment.filters.update(
 )
 _jinja_environment.tests.update(
     _to_mapping(
-        [ is_array ]
+        [
+            is_array
+        ]
     )
 )
 
