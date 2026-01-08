@@ -99,7 +99,7 @@ def main(
             logger.error("No CommandLineTool(s) found in input CWL document")
     else:
         logger.info('------------------------------------------------------------------------')
-        logger.debug(f"Processing CommadLineTools {[clt.id for clt in clts]}")
+        logger.debug(f"Processing CommandLineTools {[clt.id for clt in clts]}")
 
         output.mkdir(parents=True, exist_ok=True)
 
