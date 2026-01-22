@@ -39,6 +39,11 @@ import time
 
 pattern = re.compile(r'(?<!^)(?=[A-Z])')
 
+def clean_rn(value: str | None) -> str:
+    if value:
+        return value.lstrip().rstrip()
+    return "No info provided"
+
 def to_snake_case(name: str) -> str:
     return pattern.sub('_', name.replace('-', '_')).lower()
 
@@ -202,7 +207,7 @@ def _to_mapping(
 
 def _get_version() -> str:
     try:
-        return version("cwl2puml")
+        return version("cwl2click")
     except PackageNotFoundError:
         return 'N/A'
 
@@ -214,6 +219,7 @@ _jinja_environment = Environment(
 _jinja_environment.filters.update(
     _to_mapping(
         [
+            clean_rn,
             get_base_command,
             get_command_name,
             is_array,

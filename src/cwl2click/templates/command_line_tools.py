@@ -15,13 +15,13 @@ import click
 {% set base_command=clt | get_base_command | to_snake_case %}
 {% set command_name=clt | get_command_name %}
 
-{% if not base_command in groups %}
+{% if not base_command in groups %}# {{ groups.append(base_command) }}
 __all__.append("{{base_command}}")
 # NOTE
 # Do not forget to add the section below in your `pyproject.toml` file
 #  
 # [project.scripts]
-# {{clt | get_command_name}} = "{{module_name}}.{{clt.id | to_snake_case}}:{{base_command}}"
+# {{command_name}} = "{{module_name}}.{{clt.id | to_snake_case}}:{{base_command}}"
 {% if command_name %}@click.group()
 def {{base_command}}() -> None:
     pass
@@ -29,8 +29,8 @@ def {{base_command}}() -> None:
 {{base_command}} = click.Command(
     name="{{base_command}}",
     callback={{clt.id | to_snake_case}}_command,
-    help="{{clt.doc}}",
-    short_help="{{clt.label}}",
+    help="{{clt.doc | clean_rn}}",
+    short_help="{{clt.label | clean_rn}}",
     params=[
 {% for input in clt.inputs %}            click.Option(
             ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
@@ -39,7 +39,7 @@ def {{base_command}}() -> None:
             multiple={{input.type_ | is_multiple}},
             required={{input.type_ | is_required}},
             is_flag={{input.type_ | is_flag}},{% if input.doc %}
-            help="{{input.doc}}",{% endif %}
+            help="{{input.doc | clean_rn}}",{% endif %}
         ),
 {% endfor %}    ]
 ){% endif %}{% endif %}
@@ -49,8 +49,8 @@ def {{base_command}}() -> None:
     click.Command(
         name="{{command_name}}",
         callback={{clt.id | to_snake_case}}_command,
-        help="{{clt.doc}}",
-        short_help="{{clt.label}}",
+        help="{{clt.doc | clean_rn}}",
+        short_help="{{clt.label | clean_rn}}",
         params=[
 {% for input in clt.inputs %}            click.Option(
                 ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
@@ -59,7 +59,7 @@ def {{base_command}}() -> None:
                 multiple={{input.type_ | is_multiple}},
                 required={{input.type_ | is_required}},
                 is_flag={{input.type_ | is_flag}},{% if input.doc %}
-                help="{{input.doc}}",{% endif %}
+                help="{{input.doc | clean_rn}}",{% endif %}
             ),
 {% endfor %}        ]
     )

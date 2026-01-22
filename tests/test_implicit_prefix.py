@@ -17,32 +17,36 @@ from unittest import TestCase
 from tests.utils import CWLClickTestCase
 
 
-class TestStringFormat(CWLClickTestCase, TestCase):
+class TestImplicitPrefix(CWLClickTestCase, TestCase):
 
     def setUp(self):
         super().setUp()
-        self.cli = self.generate_cli("tests/data/string-format.cwl")
+        self.cli = self.generate_cli("tests/data/implicit-prefix.cwl")
 
-    def test_uri_inputs(self):
-
+    def test_directory_inputs(self):
         self.assertIn("argument", self.cli.commands)
 
         cmd = self.cli.commands["argument"]
         params = {p.name: p for p in cmd.params}
-        self.assertIn("uri_input", params)
+        self.assertIn("directory_input", params)
+        self.assertIn("file_input", params)
 
-        opt = params["uri_input"]
-        
-        self.assertEqual(opt.type.name, "text")
+        opt = params["directory_input"]
+        self.assertTrue(opt.type.dir_okay)
+        self.assertFalse(opt.type.file_okay)
+        self.assertTrue(opt.type.exists)
+        self.assertTrue(opt.type.readable)
+        self.assertTrue(opt.type.resolve_path)
 
-    def test_uuid_inputs(self):
-
-        self.assertIn("argument", self.cli.commands)
-
+    def test_file_inputs(self):
         cmd = self.cli.commands["argument"]
         params = {p.name: p for p in cmd.params}
-        self.assertIn("uuid_input", params)
+        self.assertIn("file_input", params)
 
-        opt = params["uuid_input"]
-        
-        self.assertEqual(opt.type.name, "uuid") 
+        opt = params["file_input"]
+
+        self.assertTrue(opt.type.file_okay)
+        self.assertFalse(opt.type.dir_okay)
+        self.assertTrue(opt.type.exists)
+        self.assertTrue(opt.type.readable)
+        self.assertTrue(opt.type.resolve_path)

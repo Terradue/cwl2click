@@ -26,11 +26,11 @@ $graph:
     directory-input:
       type: Directory
       inputBinding:
-        prefix: --directory-input
+        # prefix: --directory-input voluntarily omitted
     file-input:
       type: File
-      inputBinding:
-        prefix: --file-input
+      # inputBinding: voluntarily omitted
+      #   prefix: --file-input voluntarily omitted
   outputs:
     result:
       outputBinding:
