@@ -21,7 +21,7 @@ __all__.append("{{base_command}}")
 # Do not forget to add the section below in your `pyproject.toml` file
 #  
 # [project.scripts]
-# {{clt | get_command_name}} = "{{module_name}}.{{clt.id | to_snake_case}}:{{base_command}}"
+# {{base_command}} = "{{module_name}}.{{clt.id | to_snake_case}}:{{base_command}}"
 {% if command_name %}@click.group()
 def {{base_command}}() -> None:
     pass
