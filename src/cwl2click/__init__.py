@@ -202,7 +202,7 @@ def _to_mapping(
 
 def _get_version() -> str:
     try:
-        return version("cwl2puml")
+        return version("cwl2click")
     except PackageNotFoundError:
         return 'N/A'
 
