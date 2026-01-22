@@ -15,13 +15,15 @@ import click
 {% set base_command=clt | get_base_command | to_snake_case %}
 {% set command_name=clt | get_command_name %}
 
-{% if not base_command in groups %}
+# {{groups}}
+
+{% if not base_command in groups %}# {{ groups.append(base_command) }}
 __all__.append("{{base_command}}")
 # NOTE
 # Do not forget to add the section below in your `pyproject.toml` file
 #  
 # [project.scripts]
-# {{base_command}} = "{{module_name}}.{{clt.id | to_snake_case}}:{{base_command}}"
+# {{command_name}} = "{{module_name}}.{{clt.id | to_snake_case}}:{{base_command}}"
 {% if command_name %}@click.group()
 def {{base_command}}() -> None:
     pass
