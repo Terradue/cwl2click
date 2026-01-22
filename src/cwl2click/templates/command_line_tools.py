@@ -15,8 +15,6 @@ import click
 {% set base_command=clt | get_base_command | to_snake_case %}
 {% set command_name=clt | get_command_name %}
 
-# {{groups}}
-
 {% if not base_command in groups %}# {{ groups.append(base_command) }}
 __all__.append("{{base_command}}")
 # NOTE
