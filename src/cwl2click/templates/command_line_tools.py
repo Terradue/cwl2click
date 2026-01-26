@@ -34,7 +34,7 @@ def {{base_command}}() -> None:
     params=[
 {% for input in clt.inputs %}            click.Option(
             ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
-            "{{input.id}}",
+            "{{input.id | to_snake_case}}",
             type=click.{{input.type_ | to_click_type}},
             multiple={{input.type_ | is_multiple}},
             required={{input.type_ | is_required}},
@@ -54,7 +54,7 @@ def {{base_command}}() -> None:
         params=[
 {% for input in clt.inputs %}            click.Option(
                 ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
-                "{{input.id}}",
+                "{{input.id | to_snake_case}}",
                 type=click.{{input.type_ | to_click_type}},
                 multiple={{input.type_ | is_multiple}},
                 required={{input.type_ | is_required}},
