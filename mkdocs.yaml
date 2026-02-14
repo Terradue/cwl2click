@@ -13,10 +13,10 @@
 # limitations under the License.
 
 site_name: CWL2Click
-site_url: https://eoepca.github.io/cwl2ckick/
+site_url: https://eoepca.github.io/cwl2click/
 site_author: Fabrice Brito, Simone Tripodi
-repo_url: https://github.com/Terradue/cwl2ckick/
-repo_name: Terradue/cwl2ckick
+repo_url: https://github.com/Terradue/cwl2click/
+repo_name: Terradue/cwl2click
 
 theme:
   logo: imgs/icon-eoap.png
