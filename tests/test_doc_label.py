@@ -18,7 +18,6 @@ from tests.utils import CWLClickTestCase
 
 
 class TestDocLabel(CWLClickTestCase, TestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -34,7 +33,6 @@ class TestDocLabel(CWLClickTestCase, TestCase):
 
         params = {p.name: p for p in cmd.params}
         self.assertIn("input", params)
-        
+
         opt = params["input"]
         self.assertEqual(opt.help, "this is input label")
-        

@@ -12,54 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import (
-    to_click,
-    to_snake_case
-)
+from . import to_click, to_snake_case
 from cwl_loader import load_cwl_from_location
-from cwl_utils.parser import (
-    Process,
-    CommandLineTool
-)
+from cwl_utils.parser import Process, CommandLineTool
 from datetime import datetime
 from loguru import logger
 from pathlib import Path
-from os.path import (
-    basename,
-    splitext
-)
+from os.path import basename, splitext
 from typing import List
 from urllib.parse import urlparse
 
 import click
 import time
 
+
 @click.command()
-@click.argument(
-    'workflow',
-    required=True
-)
+@click.argument("workflow", required=True)
 @click.option(
-    '--workflow-id',
+    "--workflow-id",
     required=False,
     type=click.STRING,
     multiple=True,
-    help="ID(s) of the CommandLineTools"
+    help="ID(s) of the CommandLineTools",
 )
 @click.option(
-    '--output',
-    type=click.Path(
-        path_type=Path
-    ),
+    "--output",
+    type=click.Path(path_type=Path),
     required=True,
     default=Path("."),
-    help="Output directory path"
+    help="Output directory path",
 )
-def main(
-    workflow: str,
-    workflow_id: List[str],
-    output: Path
-):
+def main(workflow: str, workflow_id: List[str], output: Path):
     start_time = time.time()
 
     click.STRING
@@ -73,17 +56,25 @@ def main(
         if isinstance(process, CommandLineTool):
             logger.debug(f"  '{process.id}' is a CommandLineTool instance")
             if workflow_id:
-                logger.debug(f"  Checking if '{process.id}' is in the include list {workflow_id}...")
+                logger.debug(
+                    f"  Checking if '{process.id}' is in the include list {workflow_id}..."
+                )
                 if process.id in workflow_id:
-                    logger.debug(f"  '{process.id}' is in the include list {workflow_id}, processing")
+                    logger.debug(
+                        f"  '{process.id}' is in the include list {workflow_id}, processing"
+                    )
                     clts.append(process)
                 else:
-                    logger.warning(f"  '{process.id}' not in the include list, discarding")
+                    logger.warning(
+                        f"  '{process.id}' not in the include list, discarding"
+                    )
             else:
                 logger.debug(f"  Include list not defined, processing '{process.id}'")
                 clts.append(process)
         else:
-            logger.warning(f"  '{process.id}' is not a CommandLineTool instance, discarding")
+            logger.warning(
+                f"  '{process.id}' is not a CommandLineTool instance, discarding"
+            )
 
     if isinstance(cwl_document, list):
         logger.debug(f"Input CWL Document from {workflow} is a $graph:")
@@ -94,11 +85,15 @@ def main(
 
     if not clts:
         if workflow_id:
-            logger.error(f"{workflow_id} not found on in input CWL document, only {list(map(lambda p: p.id, cwl_document)) if isinstance(cwl_document, list) else [cwl_document.id]} available.")
+            logger.error(
+                f"{workflow_id} not found on in input CWL document, only {list(map(lambda p: p.id, cwl_document)) if isinstance(cwl_document, list) else [cwl_document.id]} available."
+            )
         else:
             logger.error("No CommandLineTool(s) found in input CWL document")
     else:
-        logger.info('------------------------------------------------------------------------')
+        logger.info(
+            "------------------------------------------------------------------------"
+        )
         logger.debug(f"Processing CommandLineTools {[clt.id for clt in clts]}")
 
         output.mkdir(parents=True, exist_ok=True)
@@ -106,7 +101,7 @@ def main(
         file_name = basename(workflow)
         try:
             result = urlparse(workflow)
-            if result.scheme in ('http', 'https') and result.netloc:
+            if result.scheme in ("http", "https") and result.netloc:
                 logger.debug(f"{workflow} was parsed from a URL, normalizing...")
                 file_name = basename(result.path)
             else:
@@ -120,24 +115,34 @@ def main(
         module_name = basename(target.parent.absolute().as_posix())
 
         try:
-            with target.open('w') as stream:
+            with target.open("w") as stream:
                 to_click(
                     command_line_tools=clts,
                     module_name=module_name,
-                    output_stream=stream
+                    output_stream=stream,
                 )
 
-            logger.success(f"'{workflow}' successfully converted to Click Python application in '{target.absolute()}'.")
+            logger.success(
+                f"'{workflow}' successfully converted to Click Python application in '{target.absolute()}'."
+            )
 
-            logger.info('------------------------------------------------------------------------')
-            logger.success('BUILD SUCCESS')
+            logger.info(
+                "------------------------------------------------------------------------"
+            )
+            logger.success("BUILD SUCCESS")
         except Exception as e:
-            logger.info('------------------------------------------------------------------------')
-            logger.error('BUILD FAILED')
+            logger.info(
+                "------------------------------------------------------------------------"
+            )
+            logger.error("BUILD FAILED")
             logger.error(f"An unexpected error occurred while generating {target}: {e}")
 
     end_time = time.time()
 
-    logger.info('------------------------------------------------------------------------')
+    logger.info(
+        "------------------------------------------------------------------------"
+    )
     logger.info(f"Total time: {end_time - start_time:.4f} seconds")
-    logger.info(f"Finished at: {datetime.fromtimestamp(end_time).isoformat(timespec='milliseconds')}")
+    logger.info(
+        f"Finished at: {datetime.fromtimestamp(end_time).isoformat(timespec='milliseconds')}"
+    )

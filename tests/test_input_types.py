@@ -18,7 +18,6 @@ from tests.utils import CWLClickTestCase
 
 
 class TestInputTypes(CWLClickTestCase, TestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -35,7 +34,7 @@ class TestInputTypes(CWLClickTestCase, TestCase):
         self.assertIn("string_input", params)
         self.assertIn("int_input", params)
         self.assertIn("float_input", params)
-        
+
         opt = params["directory_input"]
         self.assertTrue(opt.required)
         self.assertEqual(opt.type.name, "directory")
@@ -44,7 +43,7 @@ class TestInputTypes(CWLClickTestCase, TestCase):
         opt = params["file_input"]
         self.assertTrue(opt.required)
         self.assertEqual(opt.type.name, "file")
-        self.assertFalse(opt.multiple)   
+        self.assertFalse(opt.multiple)
 
         opt = params["string_input"]
         self.assertTrue(opt.required)

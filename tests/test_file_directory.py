@@ -18,13 +18,11 @@ from tests.utils import CWLClickTestCase
 
 
 class TestFileDirectory(CWLClickTestCase, TestCase):
-
     def setUp(self):
         super().setUp()
         self.cli = self.generate_cli("tests/data/file-directory.cwl")
 
     def test_directory_inputs(self):
-
         self.assertIn("argument", self.cli.commands)
 
         cmd = self.cli.commands["argument"]
@@ -40,7 +38,6 @@ class TestFileDirectory(CWLClickTestCase, TestCase):
         self.assertTrue(opt.type.resolve_path)
 
     def test_file_inputs(self):
-        
         cmd = self.cli.commands["argument"]
         params = {p.name: p for p in cmd.params}
         self.assertIn("file_input", params)

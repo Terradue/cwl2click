@@ -19,7 +19,6 @@ from tests.utils import CWLClickTestCase
 
 
 class TestBehaviour(CWLClickTestCase, TestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -31,7 +30,6 @@ class TestBehaviour(CWLClickTestCase, TestCase):
 
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn("Error: Missing option '--input'.", result.output)
-
 
     def test_basecommand_argument_help(self):
         cli = self.generate_cli("tests/data/basecommand-argument.cwl")

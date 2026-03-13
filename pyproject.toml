@@ -51,6 +51,17 @@ extra-dependencies = [
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/cwl2click tests}"
 
+[tool.hatch.envs.dev]
+description = "Development environment"
+dependencies = [
+  "pytest==9.0.2",
+  "ruff==0.14.6",
+]
+
+[tool.hatch.envs.dev.scripts]
+lint = "ruff format src tests"
+check = "ruff check --fix src tests"
+
 [tool.coverage.run]
 source_pkgs = ["cwl2click", "tests"]
 branch = true
