@@ -26,11 +26,11 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "cwl-loader>=0.14.0",
-  "cwl-utils>=0.40",
-  "click>=8.2.1",
-  "Jinja2>=3.1.6",
-  "loguru"
+  "cwl-loader==0.15.0",
+  "cwl-utils==0.40",
+  "click==8.1.8",
+  "Jinja2==3.1.6",
+  "loguru==0.7.3"
 ]
 
 [project.scripts]
