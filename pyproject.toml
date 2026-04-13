@@ -58,6 +58,15 @@ dependencies = [
   "ruff==0.14.6",
 ]
 
+[tool.hatch.envs.test.scripts]
+test = "pytest"
+test-q = "pytest -q"
+test-cov = "pytest --cov=cwl2puml --cov-report=xml --cov-report=html"
+test-show-setup = "pytest --setup-show"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
 [tool.hatch.envs.dev.scripts]
 lint = "ruff format src tests"
 check = "ruff check --fix src tests"
