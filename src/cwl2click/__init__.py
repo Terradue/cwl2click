@@ -232,7 +232,7 @@ _jinja_environment.tests.update(_to_mapping([is_array]))
 def to_click(
     command_line_tools: List[CommandLineTool], module_name: str, output_stream: TextIO
 ):
-    template = _jinja_environment.get_template(f"command_line_tools.py")
+    template = _jinja_environment.get_template("command_line_tools.py")
 
     output_stream.write(
         template.render(
