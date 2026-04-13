@@ -12,59 +12,118 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: publish-to-pypi
+name: build-and-publish
 
 on:
   push:
-    branches: [develop, main]
-    paths:
-    - 'src/**'
-    - '.github/workflows/package.yaml'
-    - 'tests/**'
-
-  release:
-    types: [published]
-  pull_request:
-    branches: [develop, main]
-    paths:
-    - 'src/**'
+    branches:
+      - develop
+      - main
+    tags:
+      - 'v*.*.*'
 
 permissions:
+  id-token: write
   contents: read
   packages: write
 
+env:
+  IMAGE_ID: ghcr.io/eoepca/eoap-cwlwrap/eoap-cwlwrap
+
 jobs:
 
-  deploy:
+  build:
+
     runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        cache: 'pip'
-    - name: Install dependencies
-      run: |
-        # python -m pip install --upgrade pip
-        pip install hatch
-    - name: Build package
-      run: |
-        hatch build 
-    - name: Test package
-      run: |
-        hatch test
-    - name: Publish package distributions to PyPI (main)
-      if: github.ref == 'refs/heads/main'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://upload.pypi.org/legacy/
-    - name: Publish package distributions to PyPI (develop)
-      if: github.ref != 'refs/heads/main' 
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install hatch nose2
+
+      # -----------------------------
+      # Strict SemVer + Hatch version gate
+      # -----------------------------
+      - name: Validate tag and hatch version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+
+          # Ensure tag starts with v
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: Tag must follow strict SemVer format vX.Y.Z"
+            exit 1
+          fi
+
+          TAG_VERSION="${TAG#v}"
+          HATCH_VERSION=$(hatch version)
+
+          echo "Tag version:   $TAG_VERSION"
+          echo "Hatch version: $HATCH_VERSION"
+
+          if [ "$TAG_VERSION" != "$HATCH_VERSION" ]; then
+            echo "ERROR: Git tag version does not match hatch version"
+            exit 1
+          fi
+
+      - name: Build package
+        run: hatch build
+
+      - name: Test package
+        run: hatch test --verbose
+
+      # -----------------------------
+      # Determine container tag
+      # -----------------------------
+      - name: Determine image tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/heads/develop ]]; then
+            echo "IMAGE_TAG=latest-dev" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "IMAGE_TAG=$VERSION" >> $GITHUB_ENV
+          fi
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build container
+        run: |
+          docker build . -f Dockerfile -t eoap-cwlwrap
+          docker tag eoap-cwlwrap $IMAGE_ID:${IMAGE_TAG}
+
+      - name: Push container
+        run: docker push $IMAGE_ID:${IMAGE_TAG}
+
+  publish-to-pypi:
+
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install hatch
+        run: pip install hatch
+
+      - name: Build package
+        run: hatch build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
