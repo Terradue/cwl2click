@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cwl_loader.utils import contains_process, search_process
 from cwl_utils.parser import CommandLineTool
 from datetime import datetime
 from jinja2 import Environment, PackageLoader
