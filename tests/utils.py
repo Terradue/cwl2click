@@ -40,10 +40,7 @@ class CWLClickTestCase:
     def generate_cli(self, cwl_path: str | Path):
         runner = CliRunner()
 
-        result = runner.invoke(
-            main,
-            [str(cwl_path), "--output", str(self.tmp_path)]
-        )
+        result = runner.invoke(main, [str(cwl_path), "--output", str(self.tmp_path)])
 
         if result.exit_code != 0:
             raise AssertionError(result.output)
@@ -51,7 +48,7 @@ class CWLClickTestCase:
         py_files = list(self.tmp_path.glob("*.py"))
         if len(py_files) != 1:
             raise AssertionError(f"Expected 1 generated file, got {py_files}")
-        
+
         self._stub_impl_modules(py_files[0])
 
         return self._import_cli(py_files[0])
@@ -65,7 +62,7 @@ class CWLClickTestCase:
 
         for line in text.splitlines():
             if "_impl import execute" in line:
-                module_path = line.split()[1]      # module.cli_impl
+                module_path = line.split()[1]  # module.cli_impl
                 pkg, mod = module_path.split(".")
 
                 pkg_dir = self.tmp_path / pkg
@@ -76,10 +73,7 @@ class CWLClickTestCase:
                 init_file.touch(exist_ok=True)
 
                 impl_file = pkg_dir / f"{mod}.py"
-                impl_file.write_text(
-                    "def execute(*args, **kwargs):\n"
-                    "    pass\n"
-                )
+                impl_file.write_text("def execute(*args, **kwargs):\n    pass\n")
 
     def _import_cli(self, py_file: Path):
         module_name = f"cwl2click_test_{py_file.stem}"
@@ -97,8 +91,9 @@ class CWLClickTestCase:
             spec.loader.exec_module(module)
         except Exception as e:
             import traceback
+
             traceback.print_exc()
-            raise e 
+            raise e
 
         if not hasattr(module, "basecommand"):
             raise AssertionError("Generated module does not expose `basecommand`")

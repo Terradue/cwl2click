@@ -18,7 +18,6 @@ from tests.utils import CWLClickTestCase
 
 
 class TestImplicitPrefix(CWLClickTestCase, TestCase):
-
     def setUp(self):
         super().setUp()
         self.cli = self.generate_cli("tests/data/implicit-prefix.cwl")
