@@ -58,6 +58,14 @@ dependencies = [
   "ruff==0.14.6",
 ]
 
+[tool.hatch.envs.test]
+skip-install = false
+
+dependencies = [
+  "pytest==9.0.2",
+  "pytest-cov==7.0.0",
+]
+
 [tool.hatch.envs.test.scripts]
 test = "pytest"
 test-q = "pytest -q"
