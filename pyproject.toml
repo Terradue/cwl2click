@@ -37,7 +37,7 @@ dependencies = [
 cwl2click = "cwl2click.cli:main"
 
 [project.urls]
-Documentation = "https://github.com/Terradue/cwl2click#readme"
+Documentation = "https://terradue.github.io/cwl2click/"
 Issues = "https://github.com/Terradue/cwl2click/issues"
 Source = "https://github.com/Terradue/cwl2click"
 
