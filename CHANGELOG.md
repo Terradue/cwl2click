@@ -37,7 +37,7 @@ release tags.
 - Excluded generated templates from Ruff checks.
 - Aligned package workflow repository configuration.
 - Dependencies bump:
-  - `cwl-loader` to `0.23.0`.
+  - `cwl-loader` to `0.24.0`.
   - `cwl-utils` to `0.42`.
   - `click` to `8.4.2`.
 
