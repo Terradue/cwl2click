@@ -18,6 +18,21 @@ Boostrap a Python CLI using `click` from a CWL `CommandLineTool`(s).
 pip install cwl2click
 ```
 
+### Local quality checks
+
+Install [Hatch](https://hatch.pypa.io/) and [Taskfiles](https://taskfile.dev/docs/guide) then install the Git hook:
+
+```console
+task quality:pre-commit:install
+```
+
+Every commit runs Ruff (including the configured McCabe complexity limit),
+Ruff formatting, strict mypy checks, and the pytest suite.
+Run the complete hook explicitly with:
+
+```console
+task quality:pre-commit:run
+
 ## License
 
 [![Apache License, Version 2.0](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)

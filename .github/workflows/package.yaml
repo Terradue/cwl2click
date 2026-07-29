@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 jobs:
-  ci:
+  build:
     if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     strategy:
@@ -46,40 +46,72 @@ jobs:
         - '3.12'
         - '3.13'
         - '3.14'
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: pip
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
-    - name: Install tooling
-      run: pip install hatch ruff
+      - name: Install tooling
+        run: pip install hatch
 
-    - name: Ruff Check
-      run: ruff check .
+      # -----------------------------
+      # Strict SemVer + Hatch version gate
+      # -----------------------------
+      - name: Validate tag and hatch version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
 
-    - name: Ruff Lint
-      run: ruff format --check .
+          # Ensure tag starts with v
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: Tag must follow strict SemVer format vX.Y.Z"
+            exit 1
+          fi
 
-    - name: Run tests
-      run: hatch run test:test
+          TAG_VERSION="${TAG#v}"
+          HATCH_VERSION=$(hatch version)
+
+          echo "Tag version:   $TAG_VERSION"
+          echo "Hatch version: $HATCH_VERSION"
+
+          if [ "$TAG_VERSION" != "$HATCH_VERSION" ]; then
+            echo "ERROR: Git tag version does not match hatch version"
+            exit 1
+          fi
+
+      - name: mypy (strict type checking)
+        run: hatch run dev:typecheck
+
+      - name: ruff (format)
+        run: hatch run dev:lint
+
+      - name: ruff (check and McCabe complexity)
+        run: hatch run dev:check
+
+      - name: bandit (find common security issues)
+        run: hatch run dev:security
+
+      - name: pytest (test coverage)
+        run: hatch run test:test-cov
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: ci
+    needs: build
     runs-on: ubuntu-latest
     environment: release
     permissions:
       id-token: write
       contents: read
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
         cache: pip

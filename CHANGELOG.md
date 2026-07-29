@@ -13,8 +13,22 @@ release tags.
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.7.0] - 2026-07-29
+
+### Added
+
 - Dependabot configuration for automated dependency update checks.
-- Ruff linting and formatting tasks in the development environment.
+- Stronger code chekers with Ruff+McCabe & Bandit.
 - Taskfile-based quality workflow integration.
 
 ### Changed
@@ -22,6 +36,10 @@ release tags.
 - Reused remote quality tasks to avoid duplicated local task definitions.
 - Excluded generated templates from Ruff checks.
 - Aligned package workflow repository configuration.
+- Dependencies bump:
+  - `cwl-loader` to `0.23.0`.
+  - `cwl-utils` to `0.42`.
+  - `click` to `8.4.2`.
 
 ### Fixed
 
@@ -29,6 +47,10 @@ release tags.
 - Removed unused imports found by linting.
 - Declared the missing Hatch test environment.
 - Stopped the package workflow from building an unnecessary Docker image.
+
+### Security
+
+- [CWE-94](https://cwe.mitre.org/data/definitions/94.html) Jinja2 [XSS vulnerability]( https://bandit.readthedocs.io/en/1.9.4/plugins/b701_jinja2_autoescape_false.html).
 
 ## [0.6.0] - 2026-01-26
 
