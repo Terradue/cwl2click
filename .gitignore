@@ -7,3 +7,4 @@ __pycache__
 .task
 .venv
 docs/api
+uv.lock

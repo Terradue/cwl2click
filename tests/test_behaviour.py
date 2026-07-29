@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import TestCase
-from click.testing import CliRunner
 from pathlib import Path
+from unittest import TestCase
+
+from click.testing import CliRunner
+
 from tests.utils import CWLClickTestCase
 
 

@@ -7,7 +7,7 @@ name = "cwl2click"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = []
 authors = [
@@ -17,18 +17,18 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "cwl-loader==0.15.0",
-  "cwl-utils==0.40",
-  "click==8.1.8",
+  "cwl-loader==0.24.0",
+  "cwl-utils==0.42",
+  "click==8.4.2",
   "Jinja2==3.1.6",
   "loguru==0.7.3"
 ]
@@ -37,50 +37,92 @@ dependencies = [
 cwl2click = "cwl2click.cli:main"
 
 [project.urls]
-Documentation = "https://github.com/Terradue/cwl2click#readme"
+Documentation = "https://terradue.github.io/cwl2click/"
 Issues = "https://github.com/Terradue/cwl2click/issues"
 Source = "https://github.com/Terradue/cwl2click"
 
 [tool.hatch.version]
 path = "src/cwl2click/__about__.py"
 
-[tool.hatch.envs.types]
-extra-dependencies = [
-  "mypy>=1.0.0",
-]
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/cwl2click tests}"
-
-[tool.hatch.envs.dev]
-description = "Development environment"
-dependencies = [
-  "pytest==9.0.2",
-  "ruff==0.14.6",
-]
-
-[tool.hatch.envs.test]
+[tool.hatch.envs.default]
 skip-install = false
 
+[tool.hatch.envs.dev]
+skip-install = false
 dependencies = [
-  "pytest==9.0.2",
-  "pytest-cov==7.0.0",
+  "mypy>=2.3.0",
+  "ruff>=0.16.0",
+  "bandit>=1.9.4",
 ]
-
-[tool.hatch.envs.test.scripts]
-test = "pytest"
-test-q = "pytest -q"
-test-cov = "pytest --cov=cwl2puml --cov-report=xml --cov-report=html"
-test-show-setup = "pytest --setup-show"
-
-[[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-
-[tool.hatch.envs.dev.scripts]
-lint = "ruff format src tests"
-check = "ruff check --fix src tests"
 
 [tool.ruff]
 extend-exclude = ["**/templates/**"]
+
+[tool.ruff.lint]
+# Start with the essential rules
+select = [
+  "F",    # Pyflakes (Critical for bugs)
+  "E",    # pycodestyle Errors
+  "W",    # pycodestyle Warnings
+  "I",    # isort (Import sorting)
+  "UP",   # pyupgrade (Modern syntax)
+  "B",    # flake8-bugbear (Common bugs)
+  "C4",   # flake8-comprehensions
+  "SIM",  # flake8-simplify
+  "FA",   # flake8-future-annotations
+  "TC",   # flake8-type-checking
+  "PTH",  # flake8-use-pathlib
+  "RET",  # flake8-return
+  "C90",  # McCabe Complexity (Enables C901)
+]
+
+# Ignore rules that conflict with the formatter (Ruff Format/Black)
+ignore = [
+  "E501", # Line too long (handled by formatter)
+  "W191", # Tab indentation (handled by formatter)
+  "E111", # Indentation issues (handled by formatter)
+  "E114", # Indentation issues (handled by formatter)
+  "E117", # Over-indented (handled by formatter)
+]
+
+[tool.ruff.lint.mccabe]
+# Flag errors (C901) whenever complexity exceeds 10 (default is 10)
+max-complexity = 10
+
+[tool.mypy]
+# Jinja templates only become valid Python after cwl2click renders them.
+exclude = ["^src/cwl2click/templates/"]
+
+[[tool.mypy.overrides]]
+# cwl-loader does not currently publish a PEP 561 marker or stubs.
+module = ["cwl_loader"]
+ignore_missing_imports = true
+
+[tool.hatch.envs.dev.scripts]
+typecheck = "mypy --install-types --non-interactive {args:src tests}"
+lint = "ruff format {args:src tests}"
+check = "ruff check --fix {args:src tests}"
+security = "bandit -r {args:src}"
+
+[tool.hatch.envs.test]
+skip-install = false
+dependencies = [
+  "pytest>=8.4,<10",
+  "pytest-cov>=6.2,<8",
+]
+
+[tool.hatch.envs.test.scripts]
+test = "pytest {args:tests}"
+testv = "pytest --verbose {args:tests}"
+test-cov = "pytest --cov=cwl2click --cov-report=term-missing {args:tests}"
+test-show-setup = "pytest --setup-show"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+]
 
 [tool.coverage.run]
 source_pkgs = ["cwl2click", "tests"]

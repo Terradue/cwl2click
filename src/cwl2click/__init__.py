@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cwl_utils.parser import CommandLineTool
-from datetime import datetime
-from jinja2 import Environment, PackageLoader
-from loguru import logger
-from importlib.metadata import version, PackageNotFoundError
-from typing import Any, List, Mapping, TextIO
-
 import re
 import time
+from collections.abc import Mapping
+from datetime import datetime
+from importlib.metadata import PackageNotFoundError, version
+from typing import Any, TextIO
+
+from cwl_utils.parser import CommandLineTool
+from jinja2 import Environment, PackageLoader, select_autoescape
+from loguru import logger
 
 pattern = re.compile(r"(?<!^)(?=[A-Z])")
 
@@ -39,7 +40,7 @@ def is_array(type_) -> bool:
     return (
         isinstance(type_, list)
         or hasattr(type_, "items")
-        or (hasattr(type_, "class_") and "array" == type_.class_)
+        or (hasattr(type_, "class_") and type_.class_ == "array")
     )
 
 
@@ -58,7 +59,7 @@ def is_nullable(type_: Any) -> bool:
         isinstance(type_, list)
         and "null" in type_
         or hasattr(type_, "items")
-        and "null" in getattr(type_, "items")
+        and "null" in type_.items
     )
 
 
@@ -76,21 +77,17 @@ def is_multiple(type_) -> bool:
 
     array_size: int = _get_array_size(type_)
 
-    if 2 == array_size and is_nullable(type_):
-        return False
-
-    return True
+    return not (array_size == 2 and is_nullable(type_))
 
 
 def is_flag(type_: Any) -> bool:
-    return isinstance(type_, list) and "boolean" in type_ or "boolean" == type_
+    return isinstance(type_, list) and "boolean" in type_ or type_ == "boolean"
 
 
 def get_base_command(clt: CommandLineTool) -> str:
     if clt.baseCommand:
-        if isinstance(clt.baseCommand, list):
-            if len(clt.baseCommand) > 0:
-                return clt.baseCommand[0]
+        if isinstance(clt.baseCommand, list) and len(clt.baseCommand) > 0:
+            return clt.baseCommand[0]
 
         if isinstance(clt.baseCommand, str):
             return clt.baseCommand
@@ -102,9 +99,8 @@ def get_base_command(clt: CommandLineTool) -> str:
 
 def get_command_name(clt: CommandLineTool) -> str | None:
     if clt.baseCommand:
-        if isinstance(clt.baseCommand, list):
-            if len(clt.baseCommand) > 1:
-                return clt.baseCommand[1]
+        if isinstance(clt.baseCommand, list) and len(clt.baseCommand) > 1:
+            return clt.baseCommand[1]
 
         if clt.arguments:
             if isinstance(clt.arguments, list):
@@ -140,18 +136,16 @@ def to_click_type(type_: Any) -> str:
     if isinstance(type_, str):
         key = type_
     elif isinstance(type_, list):
-        key = [item_type for item_type in type_ if "null" != item_type][0]
+        key = [item_type for item_type in type_ if item_type != "null"][0]
     elif hasattr(type_, "items"):
         key = type_.items
     elif hasattr(type_, "class_"):
         key = type_.class_  # type: ignore
     elif hasattr(type_, "symbols"):
-        return (
-            f"Choice({list(map(lambda symbol: symbol.split('/')[-1], type_.symbols))})"
-        )
+        return f"Choice({[symbol.split('/')[-1] for symbol in type_.symbols]})"
 
     if key and not isinstance(key, str) and hasattr(key, "symbols"):
-        return f"Choice({list(map(lambda symbol: symbol.split('/')[-1], key.symbols))})"
+        return f"Choice({[symbol.split('/')[-1] for symbol in key.symbols]})"
 
     mapped_type: str = _CWL_CLICK_MAP_.get(key, "STRING")
 
@@ -181,18 +175,18 @@ def to_python_type(type_) -> str:
     if isinstance(type_, str):
         key = type_
     elif isinstance(type_, list):
-        key = [item_type for item_type in type_ if "null" != item_type][0]
+        key = [item_type for item_type in type_ if item_type != "null"][0]
     else:
         key = type_.class_  # type: ignore
 
-        if "enum" == key:
+        if key == "enum":
             key = "string"
 
     return _CWL_PYTHON_MAP_.get(key, str(type_))
 
 
-def _to_mapping(functions: List[Any]) -> Mapping[str, Any]:
-    mapping: Mapping[str, Any] = {}
+def _to_mapping(functions: list[Any]) -> Mapping[str, Any]:
+    mapping: dict[str, Any] = {}
 
     for function in functions:
         mapping[function.__name__] = function
@@ -207,7 +201,10 @@ def _get_version() -> str:
         return "N/A"
 
 
-_jinja_environment = Environment(loader=PackageLoader(package_name="cwl2click"))
+_jinja_environment = Environment(
+    loader=PackageLoader(package_name="cwl2click"),
+    autoescape=select_autoescape(),
+)
 _jinja_environment.filters.update(
     _to_mapping(
         [
@@ -229,7 +226,7 @@ _jinja_environment.tests.update(_to_mapping([is_array]))
 
 
 def to_click(
-    command_line_tools: List[CommandLineTool], module_name: str, output_stream: TextIO
+    command_line_tools: list[CommandLineTool], module_name: str, output_stream: TextIO
 ):
     template = _jinja_environment.get_template("command_line_tools.py")
 
