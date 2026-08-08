@@ -226,7 +226,7 @@ _jinja_environment.tests.update(_to_mapping([is_array]))
 
 
 def to_click(
-    command_line_tools: list[CommandLineTool], module_name: str, output_stream: TextIO
+    command_line_tools: list[CommandLineTool] | tuple[CommandLineTool, ...], module_name: str, output_stream: TextIO
 ):
     template = _jinja_environment.get_template("command_line_tools.py")
 

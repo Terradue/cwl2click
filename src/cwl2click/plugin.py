@@ -1,4 +1,4 @@
-# Copyright 2025 Terradue
+# Copyright 2026 Terradue
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from datetime import datetime
-from pathlib import Path
-from urllib.parse import urlparse
+"""Built-in plugin that serializes the resolved CWL document."""
 
-import click
-from cwl_loader import load_cwl_from_location
+from __future__ import annotations
+
 from cwl_utils.parser import CommandLineTool, Process
 from loguru import logger
+from pathlib import Path
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from typing import TYPE_CHECKING
+from transpiler_mate.api import PluginExecutionError, transpiler_plugin
+from urllib.parse import urlparse
 
 from . import to_click, to_snake_case
+
+if TYPE_CHECKING:
+    from transpiler_mate.api import TranspilerContext
+
+
+class Cwl2ClickOptions(BaseModel):
+    """Options accepted by the built-in bundle plugin."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    workflow_id: list[str] = Field(description="ID(s) of the CommandLineTools")
+
+    output: Path = Field(description="Output directory path")
 
 
 def _add_if_eligible(
@@ -52,12 +67,12 @@ def _add_if_eligible(
 
 
 def _get_command_line_tools(
-    cwl_document: Process | list[Process],
-    workflow: str,
+    cwl_document: Process | tuple[Process, ...],
+    workflow: Path | AnyUrl,
     workflow_id: list[str],
 ) -> list[CommandLineTool]:
     command_line_tools: list[CommandLineTool] = []
-    if isinstance(cwl_document, list):
+    if isinstance(cwl_document, list) or isinstance(cwl_document, tuple):
         logger.debug(f"Input CWL Document from {workflow} is a $graph:")
         for process in cwl_document:
             _add_if_eligible(process, workflow_id, command_line_tools)
@@ -67,12 +82,12 @@ def _get_command_line_tools(
 
 
 def _log_empty_selection(
-    cwl_document: Process | list[Process], workflow_id: list[str]
+    cwl_document: Process | tuple[Process, ...], workflow_id: list[str]
 ) -> None:
     if workflow_id:
         available_ids = (
             [process.id for process in cwl_document]
-            if isinstance(cwl_document, list)
+            if isinstance(cwl_document, list) or isinstance(cwl_document, tuple)
             else [cwl_document.id]
         )
         logger.error(
@@ -83,27 +98,20 @@ def _log_empty_selection(
         logger.error("No CommandLineTool(s) found in input CWL document")
 
 
-def _get_target(workflow: str, output: Path) -> Path:
-    file_name = Path(workflow).name
-    try:
-        result = urlparse(workflow)
-        if result.scheme in ("http", "https") and result.netloc:
-            logger.debug(f"{workflow} was parsed from a URL, normalizing...")
-            file_name = Path(result.path).name
-        else:
-            logger.debug(f"{workflow} was not parsed from a URL")
-    except Exception:
+def _get_target(workflow: Path | AnyUrl, output: Path) -> Path:
+    if isinstance(workflow, AnyUrl):
+        logger.debug(f"{workflow} was parsed from a URL, normalizing...")
+        file_name = Path(workflow.path).name if workflow.path else "TODO"
+    else:
         logger.debug(f"{workflow} was not parsed from a URL")
+        file_name = workflow.name
 
     return output / f"{to_snake_case(Path(file_name).stem)}.py"
 
 
 def _generate_click_application(
-    workflow: str, output: Path, command_line_tools: list[CommandLineTool]
+    workflow: Path | AnyUrl, output: Path, command_line_tools: list[CommandLineTool] | tuple[CommandLineTool, ...]
 ) -> None:
-    logger.info(
-        "------------------------------------------------------------------------"
-    )
     logger.debug(
         f"Processing CommandLineTools {[clt.id for clt in command_line_tools]}"
     )
@@ -123,51 +131,22 @@ def _generate_click_application(
             f"'{workflow}' successfully converted to Click Python application in "
             f"'{target.absolute()}'."
         )
-        logger.info(
-            "------------------------------------------------------------------------"
-        )
-        logger.success("BUILD SUCCESS")
     except Exception as error:
-        logger.info(
-            "------------------------------------------------------------------------"
-        )
-        logger.error("BUILD FAILED")
-        logger.error(f"An unexpected error occurred while generating {target}: {error}")
+        raise PluginExecutionError(
+            f"An unexpected error occurred while generating {target}"
+        ) from error
 
 
-@click.command()
-@click.argument("workflow", required=True)
-@click.option(
-    "--workflow-id",
-    required=False,
-    type=click.STRING,
-    multiple=True,
-    help="ID(s) of the CommandLineTools",
+@transpiler_plugin(
+    name="cwl2click",
+    description="Bundle the resolved CWL document to a local file.",
+    options_model=Cwl2ClickOptions,
 )
-@click.option(
-    "--output",
-    type=click.Path(path_type=Path),
-    required=True,
-    default=Path(),
-    help="Output directory path",
-)
-def main(workflow: str, workflow_id: list[str], output: Path):
-    start_time = time.time()
-
-    cwl_document: Process | list[Process] = load_cwl_from_location(path=workflow)
-    clts = _get_command_line_tools(cwl_document, workflow, workflow_id)
-
+def cwl2click(context: TranspilerContext, options: Cwl2ClickOptions) -> None:
+    """Serialize the resolved CWL document to ``options.output``."""
+    clts: list[CommandLineTool] = _get_command_line_tools(context.document, context.source, options.workflow_id)
+    
     if not clts:
-        _log_empty_selection(cwl_document, workflow_id)
+        _log_empty_selection(context.document, options.workflow_id)
     else:
-        _generate_click_application(workflow, output, clts)
-
-    end_time = time.time()
-
-    logger.info(
-        "------------------------------------------------------------------------"
-    )
-    logger.info(f"Total time: {end_time - start_time:.4f} seconds")
-    logger.info(
-        f"Finished at: {datetime.fromtimestamp(end_time).isoformat(timespec='milliseconds')}"
-    )
+        _generate_click_application(context.source, options.output, clts)

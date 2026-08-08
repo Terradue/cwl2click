@@ -26,15 +26,18 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "cwl-loader==0.24.0",
   "cwl-utils==0.42",
-  "click==8.4.2",
+  "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
   "Jinja2==3.1.6",
   "loguru==0.7.3"
 ]
 
-[project.scripts]
-cwl2click = "cwl2click.cli:main"
+# TODO remove me as soon as transpiler-mate-api is on PyPI
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[project.entry-points."transpiler_mate.plugins"]
+cwl2click = "cwl2click.plugin:cwl2click"
 
 [project.urls]
 Documentation = "https://terradue.github.io/cwl2click/"
@@ -92,11 +95,6 @@ max-complexity = 10
 [tool.mypy]
 # Jinja templates only become valid Python after cwl2click renders them.
 exclude = ["^src/cwl2click/templates/"]
-
-[[tool.mypy.overrides]]
-# cwl-loader does not currently publish a PEP 561 marker or stubs.
-module = ["cwl_loader"]
-ignore_missing_imports = true
 
 [tool.hatch.envs.dev.scripts]
 typecheck = "mypy --install-types --non-interactive {args:src tests}"
