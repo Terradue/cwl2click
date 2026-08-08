@@ -139,7 +139,7 @@ def _generate_click_application(
 
 @transpiler_plugin(
     name="cwl2click",
-    description="Bundle the resolved CWL document to a local file.",
+    description="Boostrap a Python CLI using click from a CWL CommandLineTool(s).",
     options_model=Cwl2ClickOptions,
 )
 def cwl2click(context: TranspilerContext, options: Cwl2ClickOptions) -> None:
