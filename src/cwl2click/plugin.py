@@ -35,7 +35,7 @@ class Cwl2ClickOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    workflow_id: list[str] = Field(description="ID(s) of the CommandLineTools")
+    workflow_id: list[str] | None = Field(default=[], description="ID(s) of the CommandLineTools")
 
     output: Path = Field(description="Output directory path")
 
@@ -90,12 +90,12 @@ def _log_empty_selection(
             if isinstance(cwl_document, list) or isinstance(cwl_document, tuple)
             else [cwl_document.id]
         )
-        logger.error(
+        raise PluginExecutionError(
             f"{workflow_id} not found on in input CWL document, "
             f"only {available_ids} available."
         )
     else:
-        logger.error("No CommandLineTool(s) found in input CWL document")
+        raise PluginExecutionError("No CommandLineTool(s) found in input CWL document")
 
 
 def _get_target(workflow: Path | AnyUrl, output: Path) -> Path:
