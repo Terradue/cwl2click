@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-fastapi = [
+transpiler-mate-api = [
   "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
 ]
 
