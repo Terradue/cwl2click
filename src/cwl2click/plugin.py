@@ -35,7 +35,7 @@ class Cwl2ClickOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    workflow_id: list[str] | None = Field(default=[], description="ID(s) of the CommandLineTools")
+    workflow_id: list[str] = Field(default_factory=list, description="ID(s) of the CommandLineTools")
 
     output: Path = Field(description="Output directory path")
 
