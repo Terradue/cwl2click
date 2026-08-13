@@ -36,3 +36,29 @@ class TestDocLabel(CWLClickTestCase, TestCase):
 
         opt = params["input"]
         self.assertEqual(opt.help, "this is input label")
+
+    def test_multiline_doc_is_normalized_for_help(self):
+        cli = self.generate_cli("tests/data/doc-multiline.cwl")
+
+        self.assertIn("argument", cli.commands)
+
+        cmd = cli.commands["argument"]
+
+        self.assertEqual(cmd.help, "This tool makes Earth Observation Great Again")
+        self.assertEqual(cmd.short_help, "this is label")
+
+    def test_multiline_doc_preserves_paragraphs_and_uses_triple_quotes(self):
+        cli = self.generate_cli("tests/data/doc-paragraphs.cwl")
+
+        self.assertIn("argument", cli.commands)
+
+        cmd = cli.commands["argument"]
+
+        self.assertEqual(
+            cmd.help,
+            "First paragraph wraps across lines.\n\nSecond paragraph stays separate.",
+        )
+
+        generated = (self.tmp_path / "doc_paragraphs.py").read_text()
+        self.assertIn('help="""First paragraph wraps across lines.', generated)
+        self.assertIn('Second paragraph stays separate."""', generated)

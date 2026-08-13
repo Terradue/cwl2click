@@ -29,8 +29,8 @@ def {{base_command}}() -> None:
 {{base_command}} = click.Command(
     name="{{base_command}}",
     callback={{clt.id | to_snake_case}}_command,
-    help="{{clt.doc | clean_rn}}",
-    short_help="{{clt.label | clean_rn}}",
+    help={{clt.doc | to_triple_quoted_string}},
+    short_help={{clt.label | to_triple_quoted_string}},
     params=[
 {% for input in clt.inputs %}            click.Option(
             ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
@@ -39,7 +39,7 @@ def {{base_command}}() -> None:
             multiple={{input.type_ | is_multiple}},
             required={{input.type_ | is_required}},
             is_flag={{input.type_ | is_flag}},{% if input.doc %}
-            help="{{input.doc | clean_rn}}",{% endif %}
+            help={{input.doc | to_triple_quoted_string}},{% endif %}
         ),
 {% endfor %}    ]
 ){% endif %}{% endif %}
@@ -49,8 +49,8 @@ def {{base_command}}() -> None:
     click.Command(
         name="{{command_name}}",
         callback={{clt.id | to_snake_case}}_command,
-        help="{{clt.doc | clean_rn}}",
-        short_help="{{clt.label | clean_rn}}",
+        help={{clt.doc | to_triple_quoted_string}},
+        short_help={{clt.label | to_triple_quoted_string}},
         params=[
 {% for input in clt.inputs %}            click.Option(
                 ["{% if input.inputBinding.prefix %}{{input.inputBinding.prefix}}{% else %}--{{input.id}}{% endif %}"],
@@ -59,7 +59,7 @@ def {{base_command}}() -> None:
                 multiple={{input.type_ | is_multiple}},
                 required={{input.type_ | is_required}},
                 is_flag={{input.type_ | is_flag}},{% if input.doc %}
-                help="{{input.doc | clean_rn}}",{% endif %}
+                help={{input.doc | to_triple_quoted_string}},{% endif %}
             ),
 {% endfor %}        ]
     )
