@@ -26,6 +26,12 @@ $graph:
   arguments: 
   - argument
   inputs:
+    datetime-input:
+      type: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml#DateTime
+      label: "Acquisition datetime"
+      doc: "Acquisition datetime in UTC string format"
+      inputBinding:
+        prefix: --datetime-input
     uri-input:
       type: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml#URI
       label: "Product URI"
