@@ -14,6 +14,8 @@
 
 from unittest import TestCase
 
+import click
+
 from tests.utils import CWLClickTestCase
 
 
@@ -32,6 +34,18 @@ class TestStringFormat(CWLClickTestCase, TestCase):
         opt = params["uri_input"]
 
         self.assertEqual(opt.type.name, "text")
+
+    def test_datetime_inputs(self):
+        self.assertIn("argument", self.cli.commands)
+
+        cmd = self.cli.commands["argument"]
+        params = {p.name: p for p in cmd.params}
+        self.assertIn("datetime_input", params)
+
+        opt = params["datetime_input"]
+
+        self.assertIsInstance(opt.type, click.DateTime)
+        self.assertEqual(tuple(opt.type.formats), ("%Y-%m-%dT%H:%M:%SZ",))
 
     def test_uuid_inputs(self):
         self.assertIn("argument", self.cli.commands)
