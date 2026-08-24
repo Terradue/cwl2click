@@ -8,4 +8,4 @@ __pycache__
 .venv
 docs/api
 uv.lock
-.vscode/settings.json
+.vscode
