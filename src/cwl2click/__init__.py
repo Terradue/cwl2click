@@ -137,7 +137,7 @@ _CWL_CLICK_MAP_: Mapping[Any, str] = {
     "string": "STRING",
     "Directory": "Path(path_type=Path, exists=True, readable=True, resolve_path=True, file_okay=False, dir_okay=True)",
     "File": "Path(path_type=Path, exists=True, readable=True, resolve_path=True, file_okay=True, dir_okay=False)",
-    f"{_STRING_FORMAT_SCHEMA_}#DateTime": "DateTime(formats=['%Y-%m-%dT%H:%M:%S'])",
+    f"{_STRING_FORMAT_SCHEMA_}#DateTime": "DateTime(formats=['%Y-%m-%dT%H:%M:%SZ'])",
     f"{_STRING_FORMAT_SCHEMA_}#UUID": "UUID",
 }
 
