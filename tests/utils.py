@@ -18,7 +18,6 @@ import tempfile
 from pathlib import Path
 
 from click.testing import CliRunner
-
 from cwl2click.cli import main
 
 

@@ -16,13 +16,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 from cwl_utils.parser import CommandLineTool, Process
 from loguru import logger
-from pathlib import Path
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
-from typing import TYPE_CHECKING
 from transpiler_mate.api import PluginExecutionError, transpiler_plugin
-from urllib.parse import urlparse
 
 from . import to_click, to_snake_case
 
@@ -35,7 +35,9 @@ class Cwl2ClickOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    workflow_id: list[str] = Field(default_factory=list, description="ID(s) of the CommandLineTools")
+    workflow_id: list[str] = Field(
+        default_factory=list, description="ID(s) of the CommandLineTools"
+    )
 
     output: Path = Field(description="Output directory path")
 
@@ -94,8 +96,7 @@ def _log_empty_selection(
             f"{workflow_id} not found on in input CWL document, "
             f"only {available_ids} available."
         )
-    else:
-        raise PluginExecutionError("No CommandLineTool(s) found in input CWL document")
+    raise PluginExecutionError("No CommandLineTool(s) found in input CWL document")
 
 
 def _get_target(workflow: Path | AnyUrl, output: Path) -> Path:
@@ -110,7 +111,9 @@ def _get_target(workflow: Path | AnyUrl, output: Path) -> Path:
 
 
 def _generate_click_application(
-    workflow: Path | AnyUrl, output: Path, command_line_tools: list[CommandLineTool] | tuple[CommandLineTool, ...]
+    workflow: Path | AnyUrl,
+    output: Path,
+    command_line_tools: list[CommandLineTool] | tuple[CommandLineTool, ...],
 ) -> None:
     logger.debug(
         f"Processing CommandLineTools {[clt.id for clt in command_line_tools]}"
@@ -144,8 +147,10 @@ def _generate_click_application(
 )
 def cwl2click(context: TranspilerContext, options: Cwl2ClickOptions) -> None:
     """Serialize the resolved CWL document to ``options.output``."""
-    clts: list[CommandLineTool] = _get_command_line_tools(context.document, context.source, options.workflow_id)
-    
+    clts: list[CommandLineTool] = _get_command_line_tools(
+        context.document, context.source, options.workflow_id
+    )
+
     if not clts:
         _log_empty_selection(context.document, options.workflow_id)
     else:
