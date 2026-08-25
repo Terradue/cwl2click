@@ -26,14 +26,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
   "cwl-utils>=0.42",
   "Jinja2==3.1.6",
   "loguru==0.7.3"
-]
-
-[project.optional-dependencies]
-transpiler-mate-api = [
-  "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
 ]
 
 # TODO remove me as soon as transpiler-mate-api is on PyPI
