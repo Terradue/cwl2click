@@ -28,8 +28,20 @@ pattern = re.compile(r"(?<!^)(?=[A-Z])")
 
 def clean_rn(value: str | None) -> str:
     if value:
-        return value.lstrip().rstrip()
+        paragraphs = [
+            " ".join(paragraph.split())
+            for paragraph in re.split(r"\n\s*\n", value.strip())
+            if paragraph.strip()
+        ]
+        if paragraphs:
+            return "\n\n".join(paragraphs)
     return "No info provided"
+
+
+def to_triple_quoted_string(value: str | None) -> str:
+    text = clean_rn(value)
+    escaped = text.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
+    return f'"""{escaped}"""'
 
 
 def to_snake_case(name: str) -> str:
@@ -125,7 +137,7 @@ _CWL_CLICK_MAP_: Mapping[Any, str] = {
     "string": "STRING",
     "Directory": "Path(path_type=Path, exists=True, readable=True, resolve_path=True, file_okay=False, dir_okay=True)",
     "File": "Path(path_type=Path, exists=True, readable=True, resolve_path=True, file_okay=True, dir_okay=False)",
-    f"{_STRING_FORMAT_SCHEMA_}#DateTime": "DateTime(formats=['%Y-%m-%dT%H:%M:%S'])",
+    f"{_STRING_FORMAT_SCHEMA_}#DateTime": "DateTime(formats=['%Y-%m-%dT%H:%M:%SZ'])",
     f"{_STRING_FORMAT_SCHEMA_}#UUID": "UUID",
 }
 
@@ -218,6 +230,7 @@ _jinja_environment.filters.update(
             is_nullable,
             to_click_type,
             to_python_type,
+            to_triple_quoted_string,
             to_snake_case,
         ]
     )

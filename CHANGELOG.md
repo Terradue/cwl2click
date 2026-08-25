@@ -23,6 +23,13 @@ release tags.
 
 ### Security
 
+## [0.8.0] - 2026-08-24
+
+### Fixed
+
+- Multiline doc addressed.
+- Generated Click DateTime format omits trailing 'Z'.
+
 ## [0.7.0] - 2026-07-29
 
 ### Added
@@ -151,7 +158,9 @@ release tags.
 - Apache-2.0 license and notice files.
 - README with the initial project purpose and installation instructions.
 
-[Unreleased]: https://github.com/Terradue/cwl2click/compare/13aedf7...HEAD
+[Unreleased]: https://github.com/Terradue/cwl2click/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Terradue/cwl2click/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/Terradue/cwl2click/compare/d1a796c...v0.7.0
 [0.6.0]: https://github.com/Terradue/cwl2click/compare/d1a796c...13aedf7
 [0.5.0]: https://github.com/Terradue/cwl2click/compare/f176901...d1a796c
 [0.4.0]: https://github.com/Terradue/cwl2click/compare/0663ebe...f176901
