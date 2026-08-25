@@ -71,7 +71,7 @@ def is_nullable(type_: Any) -> bool:
         isinstance(type_, list)
         and "null" in type_
         or hasattr(type_, "items")
-        and "null" in type_.items
+        and "null" in getattr(type_, "items", [])
     )
 
 

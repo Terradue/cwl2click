@@ -76,7 +76,7 @@ def cwl2click(context: TranspilerContext, options: Cwl2ClickOptions) -> None:
             )
             continue
 
-        logger.debug(f"  Include list not defined, processing '{process.id}'")
+        logger.debug(f"  Processing '{process.id}'")
         command_line_tools.append(process)
 
     if not command_line_tools:
