@@ -19,7 +19,7 @@ from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any, TextIO
 
-from cwl_utils.parser import CommandLineTool
+from cwl_utils.parser import CommandLineTool, Process
 from jinja2 import Environment, PackageLoader, select_autoescape
 from loguru import logger
 
@@ -67,10 +67,7 @@ def _get_array_size(type_: Any) -> int:
 
 
 def is_nullable(type_: Any) -> bool:
-    return (
-        isinstance(type_, list)
-        and "null" in type_
-    )
+    return isinstance(type_, list) and "null" in type_
 
 
 def is_required(type_: Any) -> bool:
@@ -237,7 +234,7 @@ _jinja_environment.tests.update(_to_mapping([is_array]))
 
 
 def to_click(
-    command_line_tools: Iterable[CommandLineTool],
+    command_line_tools: Iterable[Process],
     module_name: str,
     output_stream: TextIO,
 ):

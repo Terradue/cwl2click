@@ -16,11 +16,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cwl_utils.parser import CommandLineTool, Process
+from cwl_utils.parser import CommandLineTool
 from loguru import logger
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 from transpiler_mate.api import PluginExecutionError, transpiler_plugin
@@ -44,7 +43,7 @@ class Cwl2ClickOptions(BaseModel):
 
 
 def _get_target(workflow: AnyUrl, output: Path) -> Path:
-    file_name = Path(workflow.path).name if workflow.path else "UNDEF" # TODO
+    file_name = Path(workflow.path).name if workflow.path else "UNDEF"  # TODO
 
     return output / f"{to_snake_case(Path(file_name).stem)}.py"
 
@@ -57,35 +56,6 @@ def _get_target(workflow: AnyUrl, output: Path) -> Path:
 def cwl2click(context: TranspilerContext, options: Cwl2ClickOptions) -> None:
     """Serialize the resolved CWL document to ``options.output``."""
 
-    clt_ids: Iterable[str] = options.clt_id if options.clt_id else context.document.keys()
-
-    command_line_tools: list[CommandLineTool] = []
-
-    for clt_id in clt_ids:
-        process: Process | None = context.document.get(clt_id)
-
-        logger.debug(f"* Checking '{clt_id}'...")
-
-        if not process:
-            logger.warning(f"  '{clt_id}' does not exist in {context.source} CWL document, discarding.")
-            continue
-
-        if not isinstance(process, CommandLineTool):
-            logger.warning(
-                f"  '{process.id}' is not a CommandLineTool instance, discarding"
-            )
-            continue
-
-        logger.debug(f"  Processing '{process.id}'")
-        command_line_tools.append(process)
-
-    if not command_line_tools:
-        raise PluginExecutionError(f"No CommandLineTool(s) found in input {context.source} CWL document")
-
-    logger.debug(
-        f"Processing CommandLineTools {[clt.id for clt in command_line_tools]}..."
-    )
-
     try:
         options.output.mkdir(parents=True, exist_ok=True)
         target = _get_target(context.source, options.output)
@@ -93,7 +63,9 @@ def cwl2click(context: TranspilerContext, options: Cwl2ClickOptions) -> None:
 
         with target.open("w") as stream:
             to_click(
-                command_line_tools=command_line_tools,
+                command_line_tools=context.get_processes_by_type(
+                    CommandLineTool, options.clt_id if options.clt_id else None
+                ),
                 module_name=module_name,
                 output_stream=stream,
             )
