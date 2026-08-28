@@ -17,10 +17,6 @@ cwlVersion: v1.2
 $graph:
 - class: CommandLineTool
   id: clt_id
-  requirements:
-    - class: SchemaDefRequirement
-      types:
-      - $import: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml
   baseCommand: 
   - basecommand
   arguments: 

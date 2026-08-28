@@ -27,7 +27,6 @@ classifiers = [
 ]
 dependencies = [
   "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
-  "cwl-utils>=0.42",
   "Jinja2==3.1.6",
   "loguru==0.7.3"
 ]
@@ -53,7 +52,7 @@ skip-install = false
 [tool.hatch.envs.dev]
 skip-install = false
 dependencies = [
-  "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
+  "click>=8.4.2,<9",
   "mypy>=2.3.0",
   "ruff>=0.16.0",
   "bandit>=1.9.4",
@@ -106,6 +105,7 @@ security = "bandit -r {args:src}"
 [tool.hatch.envs.test]
 skip-install = false
 dependencies = [
+  "click>=8.4.2,<9",
   "pytest>=8.4,<10",
   "pytest-cov>=6.2,<8",
 ]

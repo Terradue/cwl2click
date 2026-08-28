@@ -17,8 +17,18 @@ import sys
 import tempfile
 from pathlib import Path
 
-from click.testing import CliRunner
-from cwl2click.cli import main
+from cwl_utils.parser import Process, load_document_by_uri
+from pydantic import AnyUrl
+from transpiler_mate.api import SoftwareApplication, TranspilerContext
+
+from cwl2click.plugin import Cwl2ClickOptions, cwl2click
+
+
+class _UnusedResolver:
+    """Resolver required by the context contract but unused by this plugin."""
+
+    def resolve(self, location: str) -> TranspilerContext:
+        raise AssertionError(f"Unexpected attempt to resolve {location}")
 
 
 class CWLClickTestCase:
@@ -30,19 +40,38 @@ class CWLClickTestCase:
         self._tmpdir = tempfile.TemporaryDirectory()
         self.tmp_path = Path(self._tmpdir.name)
         self._imported_modules = []
+        self._added_sys_paths = []
 
     def tearDown(self):
         for name in self._imported_modules:
             sys.modules.pop(name, None)
+        for path in self._added_sys_paths:
+            sys.path.remove(path)
         self._tmpdir.cleanup()
 
     def generate_cli(self, cwl_path: str | Path):
-        runner = CliRunner()
+        source = Path(cwl_path).resolve()
+        loaded_document: Process | list[Process] = load_document_by_uri(
+            source.as_uri(), load_all=True
+        )
+        processes = (
+            loaded_document if isinstance(loaded_document, list) else [loaded_document]
+        )
+        document = {}
+        for process in processes:
+            process.id = process.id.rsplit("#", maxsplit=1)[-1]
+            for input_ in process.inputs:
+                input_.id = input_.id.rsplit("/", maxsplit=1)[-1]
+            document[process.id] = process
 
-        result = runner.invoke(main, [str(cwl_path), "--output", str(self.tmp_path)])
+        context = TranspilerContext(
+            source=AnyUrl(source.as_uri()),
+            metadata=SoftwareApplication.model_construct(),
+            document=document,
+            resolver=_UnusedResolver(),
+        )
 
-        if result.exit_code != 0:
-            raise AssertionError(result.output)
+        cwl2click.execute(context, Cwl2ClickOptions(output=self.tmp_path))
 
         py_files = list(self.tmp_path.glob("*.py"))
         if len(py_files) != 1:
@@ -78,7 +107,9 @@ class CWLClickTestCase:
         module_name = f"cwl2click_test_{py_file.stem}"
 
         # make generated package importable
-        sys.path.insert(0, str(py_file.parent))
+        import_path = str(py_file.parent)
+        sys.path.insert(0, import_path)
+        self._added_sys_paths.append(import_path)
 
         spec = importlib.util.spec_from_file_location(module_name, py_file)
         if spec is None or spec.loader is None:
